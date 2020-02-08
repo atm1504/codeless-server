@@ -159,7 +159,6 @@ exports.generateUID = (req, res, net) => {
             message: "Unauthorized access"
         });
     }
-    var flag = 0;
     var formData = {
         name: name,
         parent: parent,
@@ -176,20 +175,20 @@ exports.generateUID = (req, res, net) => {
             message: "Certificate not found"
         });
     }
+
+    var parent_res = res;
     const time = String(new Date().getTime());
     needle.post('http://192.168.137.54:8888/hospital/admin/getdob',
         formData, { json: true }, (err, res) => {
             if (err) {
                 console.error(err);
-                flag = 0
+                return flag;
             };
             if (res.body.status == 500) {
-                flag = 0;
-                console.log(flag)
-                // return res.status(500).json({
-                //     status: 500,
-                //     message: "Failes. Server crashed."
-                // });
+                return parent_res.status(500).json({
+                    status: 500,
+                    message: "Failes. Server crashed."
+                });
             }
 
             // console.log(res.body);
@@ -208,11 +207,13 @@ exports.generateUID = (req, res, net) => {
                 address: address,
                 time: time
             });
-            return user.save()
+            user.save().then(result => {
+            return parent_res.status(202).json({
+                status: 202,
+                message: "Success."
         });
-        return res.status(202).json({
-            status: 202,
-            message: "Success."
+            }).catch(err => {
+                console.log(err);
+            })
         });
-
 }
