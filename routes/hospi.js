@@ -7,6 +7,10 @@ const router = express.Router();
 const hospiController = require("./../controllers/hospi");
 
 // Login routes
-router.post("/signup",hospiController.signupHospi);
+router.post("/signup", hospiController.signupHospi);
+router.post("/login",    [
+      body('email').isString().isLength({min: 3}).trim(),
+      body('password').isLength({min: 3}).trim(),
+    ],hospiController.loginHospi);
 
 module.exports = router;
