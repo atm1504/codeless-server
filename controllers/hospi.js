@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const fileHelper = require('../utilities/util');
-const multer = require('multer');
+// const multer = require('multer');
 const { validationResult } = require('express-validator');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
@@ -111,7 +111,6 @@ exports.loginHospi = (req, res, net) => {
 }
 
 function isAuth(email, access_token) {
-    console.log(email, access_token);
     Hospi.findOne({ email: email })
         .then(user => {
             if (!user) {
@@ -144,6 +143,8 @@ exports.generateUID = (req, res, net) => {
     const phone = req.body.phone;
     const email = req.body.email;
     const name = req.body.name;
+    const image = req.file;
+    const img_temp_url = req.file.path;
 
     // console.log(req.body.email);
     
