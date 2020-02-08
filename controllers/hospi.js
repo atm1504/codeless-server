@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+var fs = require('fs-extra');
+const path = require("path");
 const fileHelper = require('../utilities/util');
 // const multer = require('multer');
 const { validationResult } = require('express-validator');
@@ -145,9 +147,10 @@ exports.generateUID = (req, res, net) => {
     const name = req.body.name;
     const image = req.file;
     const img_temp_url = req.file.path;
-
-    // console.log(req.body.email);
-    
+    const base_name = img_temp_url.split("/");
+    const url = path.join(__dirname,"certificates", base_name[2]);
+    let uid;
+    uid = "khanki.png";
 
     if (isAuth(admin_email, access_token) == false) {
         return res.status(401).json({
@@ -155,8 +158,6 @@ exports.generateUID = (req, res, net) => {
             message: "Unauthorized access"
         });
     }
-    // Extract the data
-
 
     if (!req.file) {
         return res.status(404).json({
@@ -171,7 +172,7 @@ exports.generateUID = (req, res, net) => {
     // End of blockchain call
 
     // Upload file variables;
-
+    fs.renameSync(url, path.join(__dirname,"certificates",uid));
     const time = String(new Date().getTime());
     // Creating the id
     const user = new User({
