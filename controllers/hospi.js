@@ -6,7 +6,7 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 
 const Hospi = require('../models/hospi'); // Hospital database
-const user = require("../models/user");
+const User = require("../models/user");
 
 exports.signupHospi = (req, res, net) => {
     const errors = validationResult(req);
@@ -34,10 +34,11 @@ exports.signupHospi = (req, res, net) => {
             return hospi.save();
         })
         .then(result => {
-            res.status(202).json({
+            return res.status(202).json({
+                status: "202",
                 message:"Hospital created"
             });
-            return true;
+            // res.status(202).json({message: message, data: data});
         })
         .catch(err => {
         if (!err.statusCode) {
@@ -48,105 +49,62 @@ exports.signupHospi = (req, res, net) => {
 }
 
 exports.loginHospi = (req, res, net) => {
-    const email = reg.body.email;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        const error = new Error('Login failed.');
+        error.statusCode = 422;
+        error.data = errors.array();
+        throw error;
+    }
+    const email = req.body.email;
     const password = req.body.password;
+    Hospi.findOne({ email: email })
+        .then(user => {
+            // CHeck if user is registered or not
+            if (!user) {
+                return res.status(422).json({
+                    status: "422",
+                    message: "User not found"
+                });
+            }
+            // check password of the user
+            bcrypt.compare(password, user.password)
+                .then(doMatch => {
+                    if (!doMatch) {
+                        return res.status(401).json({
+                            status: "401",
+                            message: "Password field didn't match"
+                        });
+                    }
+                    // let access_token;
+                    const to_hash = email + password + String(new Date().getTime());
+                    bcrypt.hash(to_hash, 12)
+                        .then(hashme => {
+                            user.accessToken = hashme;
+                            user.save();
+                            // console.log(access_token);
+                            
+                            return res.status(202).json({
+                                status: "202",
+                                message: "User logged in successfully.",
+                                access_token: hashme
+                            });
+                        }).catch(err => {
+                            console.log(err);
+                        });
+                })
+                .catch(err => {
+                    if (!err.statusCode) {
+                        err.statusCode = 500;
+                    }
+                    next(err);
+                });
+        })
+        .catch(err => {
+            if (!err.statusCode) {
+            err.statusCode = 500;
+            }
+            next(err);
+        });
     
 }
-
-exports.postAddProduct = (req, res, next) => {
-  const title = req.body.title;
-  const image = req.file;
-  const price = req.body.price;
-  const description = req.body.description;
-  if (!image) {
-    return res.status(422).render('admin/edit-product', {
-      pageTitle: 'Add Product',
-      path: '/admin/add-product',
-      editing: false,
-      hasError: true,
-      product: {title: title, price: price, description: description},
-      errorMessage: 'Attached file is not an image.',
-      validationErrors: []
-    });
-    }
-  const errors = validationResult(req);
-
-  if (!errors.isEmpty()) {
-    console.log(errors.array());
-    return res.status(422).render('admin/edit-product', {
-      pageTitle: 'Add Product',
-      path: '/admin/add-product',
-      editing: false,
-      hasError: true,
-      product: {
-        title: title,
-        imageUrl: imageUrl,
-        price: price,
-        description: description
-      },
-      errorMessage: errors.array()[0].msg,
-      validationErrors: errors.array()
-    });
-    }
-
-  const imageUrl = image.path;
-
-  const product = new Product({
-    title: title,
-    price: price,
-    description: description,
-    imageUrl: imageUrl,
-    userId: req.user
-  });
-  product.save()
-      .then(result => {
-        console.log('Created Product');
-        res.redirect('/admin/products');
-      })
-      .catch(err => {
-        const error = new Error(err);
-        error.httpStatusCode = 500;
-        return next(error);
-      });
-};
-
-exports.getProducts = (req, res, next) => {
-  Product
-      .find({userId: req.user._id})
-      // .select('title price -_id')
-      // .populate('userId', 'name')
-      .then(products => {
-        console.log(products);
-        res.render('admin/products', {
-          prods: products,
-          pageTitle: 'Admin Products',
-          path: '/admin/products'
-        });
-      })
-      .catch(err => {
-        const error = new Error(err);
-        error.httpStatusCode = 500;
-        return next(error);
-      });
-};
-
-exports.deleteProduct = (req, res, next) => {
-  const prodId = req.params.productId;
-  Product.findById(prodId)
-      .then(product => {
-        if (!product) {
-          return next(new Error('Product not found'));
-        }
-        fileHelper.deleteFile(product.imageUrl);
-        return Product.deleteOne({_id: prodId, userId: req.user._id})
-      })
-      .then(() => {
-        console.log('DESTROYED PRODUCT');
-        res.status(200).json({message: 'Success!'});
-      })
-      .catch(err => {
-        res.status(500).json({message: 'Failed'});
-      });
-
-
-};

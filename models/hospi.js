@@ -6,7 +6,7 @@ const hospiSchema = new Schema({
     password:{type: String, require: true},
     name: { type: String, required: false },
     phone: { type: String, required: false },
-    accessToken: String,
+    accessToken: { type: String },
     time: { type: String, required: false },
 });
 module.exports = mongoose.model('Hospi', hospiSchema);
