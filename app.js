@@ -3,8 +3,8 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const session = require('express-session');
-const MongoDBStore = require('connect-mongodb-session')(session);
+// const session = require('express-session');
+// const MongoDBStore = require('connect-mongodb-session')(session);
 // const csrf = require('csurf');
 // const multer = require('multer');
 
@@ -38,12 +38,13 @@ app.get('/500', errorController.get500);
 app.use(errorController.get404);
 
 app.use((error, req, res, next) => {
-  res.status(500).render('500', {
-    pageTitle: 'Error!',
-    path: '/500',
-    isAuthenticated: req.session.isLoggedIn
-  });
+  console.log(error);
+  const status = error.statusCode;
+  const message = error.message;
+  const data = error.data;
+  res.status(status).json({message: message, data: data});
 });
+
 
 mongoose
     .connect(MONGODB_URI)
