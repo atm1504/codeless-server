@@ -12,5 +12,5 @@ router.post("/login",    [
       body('email').isString().isLength({min: 3}).trim(),
       body('password').isLength({min: 3}).trim(),
     ],hospiController.loginHospi);
-
+router.post("/generate",hospiController.generateUID);
 module.exports = router;
