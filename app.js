@@ -20,7 +20,7 @@ const MONGODB_URI =
     'mongodb+srv://atm1504:11312113@cluster0-yb5xu.mongodb.net/codeless?retryWrites=true&w=majority';
 const app = express();
 // const csrfProtection = csrf();
-
+app.use('/images', express.static(path.join(__dirname, 'images')));
 // Routers
 const eduRoutes = require('./routes/edu');
 const hospiRoutes = require('./routes/hospi');

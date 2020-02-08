@@ -111,6 +111,7 @@ exports.loginHospi = (req, res, net) => {
 }
 
 function isAuth(email, access_token) {
+    console.log(email, access_token);
     Hospi.findOne({ email: email })
         .then(user => {
             if (!user) {
@@ -136,14 +137,6 @@ const fileFilter = (mimetype) => {
 exports.generateUID = (req, res, net) => {
     const admin_email = req.body.admin_email;
     const access_token = req.body.access_token;
-
-    if (isAuth(admin_email, access_token) == false) {
-        return res.status(401).json({
-            status: 401,
-            message: "PUnauthorized access"
-        });
-    }
-    // Extract the data
     const doctor_number = req.body.doctor_number;
     const birth_cert = req.body.birth_cert;
     const parent = req.body.parent;
@@ -151,6 +144,18 @@ exports.generateUID = (req, res, net) => {
     const phone = req.body.phone;
     const email = req.body.email;
     const name = req.body.name;
+
+    // console.log(req.body.email);
+    
+
+    if (isAuth(admin_email, access_token) == false) {
+        return res.status(401).json({
+            status: 401,
+            message: "Unauthorized access"
+        });
+    }
+    // Extract the data
+
 
     if (!req.file) {
         return res.status(404).json({
@@ -165,30 +170,29 @@ exports.generateUID = (req, res, net) => {
     // End of blockchain call
 
     // Upload file variables;
-    const fileStorage = multer.diskStorage({
-        destination: (req, file, cb) => {
-            cb(null, 'images');
-        },
-        filename: (req, file, cb) => {
-            cb(null, new Date().getTime().toISOString() + '-' + file.originalname);
-        }
-    });
-    var upload = multer({ storage: fileStorage, fileFilter: fileFilter }).single('image');
+
     const time = String(new Date().getTime());
     // Creating the id
     const user = new User({
         name: name,
         phone: phone,
         email: email,
-        uid: uid,
+        uid: 5566556,
         parent: parent,
         address: address,
         time: time
     });
-    user.save();
-
-    return res.status(202).json({
-        status: 202,
-        message: "Successfully added the certificate"
-    });
+    user.save()
+        .then(result => {
+            return res.status(202).json({
+                status: 202,
+                message: "Successfully added the certificate"
+            });
+        }).catch(err => {
+            return res.status(501).json({
+                status: 202,
+                message: "Failed to add",
+                err:err
+            });
+        })
 }
