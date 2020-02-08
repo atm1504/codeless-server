@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
+var fs = require('fs-extra');
+const path = require("path");
 const fileHelper = require('../utilities/util');
-
+// const multer = require('multer');
 const { validationResult } = require('express-validator');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
@@ -48,6 +50,7 @@ exports.signupHospi = (req, res, net) => {
       });
 }
 
+// Login hospi admins
 exports.loginHospi = (req, res, net) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -87,7 +90,8 @@ exports.loginHospi = (req, res, net) => {
                             return res.status(202).json({
                                 status: 202,
                                 message: "User logged in successfully.",
-                                access_token: hashme
+                                access_token: hashme,
+                                email:email
                             });
                         }).catch(err => {
                             console.log(err);
@@ -106,5 +110,91 @@ exports.loginHospi = (req, res, net) => {
             }
             next(err);
         });
-    
+}
+
+function isAuth(email, access_token) {
+    Hospi.findOne({ email: email })
+        .then(user => {
+            if (!user) {
+                return false
+            }
+            if (user.accessToken != access_token) {
+                return false
+            }
+            return true
+    })
+}
+
+const fileFilter = (mimetype) => {
+  if (mimetype === 'image/png' || mimetype === 'image/jpg' ||
+      mimetype === 'image/jpeg') {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
+
+// Generate uid
+exports.generateUID = (req, res, net) => {
+    const admin_email = req.body.admin_email;
+    const access_token = req.body.access_token;
+    const doctor_number = req.body.doctor_number;
+    const birth_cert = req.body.birth_cert;
+    const parent = req.body.parent;
+    const address = req.body.address;
+    const phone = req.body.phone;
+    const email = req.body.email;
+    const name = req.body.name;
+    const image = req.file;
+    const img_temp_url = req.file.path;
+    const base_name = img_temp_url.split("/");
+    const url = path.join(__dirname,"certificates", base_name[2]);
+    let uid;
+    uid = "khanki.png";
+
+    if (isAuth(admin_email, access_token) == false) {
+        return res.status(401).json({
+            status: 401,
+            message: "Unauthorized access"
+        });
+    }
+
+    if (!req.file) {
+        return res.status(404).json({
+            status: 404,
+            message: "Certificate not found"
+        });
+    }
+
+    /// Make call to BLockchain
+
+
+    // End of blockchain call
+
+    // Upload file variables;
+    fs.renameSync(url, path.join(__dirname,"certificates",uid));
+    const time = String(new Date().getTime());
+    // Creating the id
+    const user = new User({
+        name: name,
+        phone: phone,
+        email: email,
+        uid: 5566556,
+        parent: parent,
+        address: address,
+        time: time
+    });
+    user.save()
+        .then(result => {
+            return res.status(202).json({
+                status: 202,
+                message: "Successfully added the certificate"
+            });
+        }).catch(err => {
+            return res.status(501).json({
+                status: 202,
+                message: "Failed to add",
+                err:err
+            });
+        })
 }
