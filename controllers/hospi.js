@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 var fs = require('fs-extra');
 const path = require("path");
 const fileHelper = require('../utilities/util');
+var needle = require('needle');
 // const multer = require('multer');
 const { validationResult } = require('express-validator');
 const nodemailer = require('nodemailer');
@@ -158,6 +159,16 @@ exports.generateUID = (req, res, net) => {
             message: "Unauthorized access"
         });
     }
+    var flag = 0;
+    var formData = {
+        name: name,
+        parent: parent,
+        c_address: address,
+        p_address: address,
+        phone: phone,
+        dob: "12/21/2345",
+        doctor:doctor_number
+    }
 
     if (!req.file) {
         return res.status(404).json({
@@ -165,36 +176,43 @@ exports.generateUID = (req, res, net) => {
             message: "Certificate not found"
         });
     }
-
-    /// Make call to BLockchain
-
-
-    // End of blockchain call
-
-    // Upload file variables;
-    fs.renameSync(url, path.join(__dirname,"certificates",uid));
     const time = String(new Date().getTime());
-    // Creating the id
-    const user = new User({
-        name: name,
-        phone: phone,
-        email: email,
-        uid: 5566556,
-        parent: parent,
-        address: address,
-        time: time
-    });
-    user.save()
-        .then(result => {
-            return res.status(202).json({
-                status: 202,
-                message: "Successfully added the certificate"
+    needle.post('http://192.168.137.54:8888/hospital/admin/getdob',
+        formData, { json: true }, (err, res) => {
+            if (err) {
+                console.error(err);
+                flag = 0
+            };
+            if (res.body.status == 500) {
+                flag = 0;
+                console.log(flag)
+                // return res.status(500).json({
+                //     status: 500,
+                //     message: "Failes. Server crashed."
+                // });
+            }
+
+            // console.log(res.body);
+            uid = res.body.result.IdentityID;
+            const photo = res.body.result.dob_filename;
+            // console.log(url);
+            // console.log(path.join(__dirname, "certificates", String(photo)));
+            fs.renameSync(url, path.join(__dirname, "certificates", photo + ".png"));
+            flag = 1;
+            const user = new User({
+                name: name,
+                phone: phone,
+                email: email,
+                uid: uid,
+                parent: parent,
+                address: address,
+                time: time
             });
-        }).catch(err => {
-            return res.status(501).json({
-                status: 202,
-                message: "Failed to add",
-                err:err
-            });
-        })
+            return user.save()
+        });
+        return res.status(202).json({
+            status: 202,
+            message: "Success."
+        });
+
 }
