@@ -63,7 +63,7 @@ exports.loginHospi = (req, res, net) => {
             // CHeck if user is registered or not
             if (!user) {
                 return res.status(422).json({
-                    status: "422",
+                    status: 422,
                     message: "User not found"
                 });
             }
@@ -72,7 +72,7 @@ exports.loginHospi = (req, res, net) => {
                 .then(doMatch => {
                     if (!doMatch) {
                         return res.status(401).json({
-                            status: "401",
+                            status: 401,
                             message: "Password field didn't match"
                         });
                     }
@@ -85,7 +85,7 @@ exports.loginHospi = (req, res, net) => {
                             // console.log(access_token);
                             
                             return res.status(202).json({
-                                status: "202",
+                                status: 202,
                                 message: "User logged in successfully.",
                                 access_token: hashme
                             });
