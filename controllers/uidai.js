@@ -214,3 +214,44 @@ exports.getTheRequest = (req, res, net) => {
 
         });
 }
+
+exports.getAcceptedRequests = (req, res, net) => {
+    const errors = validationResult(req);
+    const admin_email = req.body.admin_email;
+    const access_token = req.body.access_token;
+    if (!errors.isEmpty()) {
+        const error = new Error('Login failed.');
+        error.statusCode = 422;
+        error.data = errors.array();
+        throw error;
+    }
+    if (isAuth(admin_email, access_token) == false) {
+        return res.status(401).json({
+            status: 401,
+            message: "Unauthorized access"
+        });
+    }
+    var parent_res = res;
+    console.log("test-2");
+    needle.get("http://192.168.137.54:8888/uidai/admin/getAcceptRequest", (err, res) => {
+        console.log("test-1");
+        if (err) {
+            return parent_res.status(500).json({
+                status: 500,
+                message: err.message
+            });
+        };
+        if (res.body.status == 500) {
+            return parent_res.status(500).json({
+                status: 500,
+                message: "Failed. Server crashed."
+            });
+        }
+        console.log(res.body);
+        return parent_res.status(202).json({
+            status: 202,
+            message: "Done",
+            request: res.body.result
+            });
+    });
+}
