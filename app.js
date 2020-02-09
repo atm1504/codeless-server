@@ -14,6 +14,7 @@ const Uidai = require("./models/uidai");
 const MONGODB_URI =
     'mongodb+srv://atm1504:11312113@cluster0-yb5xu.mongodb.net/codeless?retryWrites=true&w=majority';
 const app = express();
+app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // Routers

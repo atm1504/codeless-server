@@ -298,6 +298,5 @@ exports.uidAdminVerify = (req, res, net) => {
                 message: "Success",
                 result: res.body
             });
-
     });
 }

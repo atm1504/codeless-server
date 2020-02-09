@@ -228,3 +228,83 @@ exports.generateUID = (req, res, net) => {
     // }
     
 }
+
+
+// Generate uid
+exports.addCertificates = (req, res, net) => {
+    const access_token = req.body.access_token;
+    const doctor_number = req.body.doctor_number;
+    const type = req.body.type;
+    const image = req.file;
+    const uid = req.body.uid;
+
+    console.log(isAuth(access_token));
+    Hospi.findById(access_token)
+        .then(hosp => {
+            if (!hosp) {
+                return res.status(401).json({
+                status: 401,
+                message: "Unauthorized access"
+             });
+            } else {
+                var formData = {
+                    i_key: uid,
+                    doctor: doctor_number,
+                    type: type
+            }
+
+        if (!req.file) {
+            return res.status(404).json({
+                status: 404,
+                message: "Certificate not found"
+            });
+        }
+        const img_temp_url = req.file.path;
+        const base_name = img_temp_url.split("/");
+        const url = path.join(__dirname,"certificates", base_name[2]);
+        // let injury_url;
+
+        var parent_res = res;
+        const time = String(new Date().getTime());
+        needle.post('http://192.168.137.54:8888/hospital/admin/addreports',
+        formData, { json: true }, (err, res) => {
+            if (err) {
+                console.error(err);
+                return parent_res.status(500).json({
+                    status: 500,
+                    message: "Failed. Server crashed."
+                });
+            };
+            if (res.body.status == 500) {
+                return parent_res.status(500).json({
+                    status: 500,
+                    message: "Failed. Server crashed."
+                });
+            }
+
+            // injury_url = res.body.result.IdentityID;
+            const photo = res.body.result.Id;
+            // console.log(url);
+            // console.log(path.join(__dirname, "certificates", String(photo)));
+            fs.renameSync(url, path.join(__dirname, "certificates", photo + ".png"));
+            return parent_res.status(202).json({
+                status: 202,
+                message: "Success."
+            });
+        });
+            }
+        }).catch(err => {
+            return res.status(401).json({
+            status: 401,
+            message: "Unauthorized access"
+        });
+    })
+
+    // if (isAuth(access_token) == false) {
+    //     return res.status(401).json({
+    //         status: 401,
+    //         message: "Unauthorized access"
+    //     });
+    // }
+    
+}
