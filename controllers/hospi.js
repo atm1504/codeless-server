@@ -82,22 +82,12 @@ exports.loginHospi = (req, res, net) => {
                         });
                     }
                     // let access_token;
-                    const to_hash = email + password + String(new Date().getTime());
-                    bcrypt.hash(to_hash, 12)
-                        .then(hashme => {
-                            user.accessToken = hashme;
-                            user.save();
-                            // console.log(access_token);
-                            
-                            return res.status(202).json({
-                                status: 202,
-                                message: "User logged in successfully.",
-                                access_token: hashme,
-                                email:email
-                            });
-                        }).catch(err => {
-                            console.log(err);
-                        });
+                    return res.status(202).json({
+                        status: 202,
+                        message: "User logged in successfully.",
+                        access_token: user._id,
+                        email: email
+                    })
                 })
                 .catch(err => {
                     if (!err.statusCode) {
@@ -114,16 +104,16 @@ exports.loginHospi = (req, res, net) => {
         });
 }
 
-function isAuth(email, access_token) {
-    Hospi.findOne({ email: email })
-        .then(user => {
-            if (!user) {
+function isAuth(access_token) {
+    Hospi.findById(access_token)
+        .then(hosp => {
+            if (!hosp) {
                 return false
+            } else {
+                return true
             }
-            if (user.accessToken != access_token) {
-                return false
-            }
-            return true
+        }).catch(err => {
+            return false;
     })
 }
 
@@ -149,13 +139,16 @@ exports.generateUID = (req, res, net) => {
     const name = req.body.name;
     const image = req.file;
 
-    if (isAuth(admin_email, access_token) == false) {
-        return res.status(401).json({
+    console.log(isAuth(access_token));
+    Hospi.findById(access_token)
+        .then(hosp => {
+            if (!hosp) {
+            return res.status(401).json({
             status: 401,
             message: "Unauthorized access"
         });
-    }
-    var formData = {
+            } else {
+                var formData = {
         name: name,
         parent: parent,
         c_address: address,
@@ -219,4 +212,19 @@ exports.generateUID = (req, res, net) => {
                 console.log(err);
             })
         });
+            }
+        }).catch(err => {
+            return res.status(401).json({
+            status: 401,
+            message: "Unauthorized access"
+        });
+    })
+
+    // if (isAuth(access_token) == false) {
+    //     return res.status(401).json({
+    //         status: 401,
+    //         message: "Unauthorized access"
+    //     });
+    // }
+    
 }

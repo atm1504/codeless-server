@@ -114,6 +114,10 @@ exports.loginUidai = (req, res, net) => {
 }
 
 function isAuth(email, access_token) {
+    console.log(email, access_token);
+    if (email == "" || access_token == "") {
+        return false;
+    }
     Uidai.findOne({ email: email })
         .then(user => {
             if (!user) {
@@ -123,6 +127,10 @@ function isAuth(email, access_token) {
                 return false
             }
             return true
+        }).catch(err => {
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
     })
 }
 
@@ -144,16 +152,17 @@ exports.getPendingRequests = (req, res, net) => {
         error.data = errors.array();
         throw error;
     }
-    if (isAuth(admin_email, access_token) == false) {
+    console.log(isAuth(admin_email, access_token));
+    if (isAuth(admin_email, access_token) == true) {
         return res.status(401).json({
             status: 401,
             message: "Unauthorized access"
         });
     }
     var parent_res = res;
-    console.log("test-2");
+    // console.log("test-2");
     needle.get("http://192.168.137.54:8888/uidai/admin/getPendingRequest", (err, res) => {
-        console.log("test-1");
+        // console.log("test-1");
         if (err) {
             return parent_res.status(500).json({
                 status: 500,
@@ -166,7 +175,7 @@ exports.getPendingRequests = (req, res, net) => {
                 message: "Failed. Server crashed."
             });
         }
-        console.log(res.body);
+        // console.log(res.body);
         return parent_res.status(202).json({
             status: 202,
             message: "Done",
