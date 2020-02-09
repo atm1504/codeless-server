@@ -8,10 +8,10 @@ const { validationResult } = require('express-validator');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 
-const Hospi = require('../models/hospi'); // Hospital database
+const Uidai = require('../models/uidai'); // Uidaital database
 const User = require("../models/user");
 
-exports.signupHospi = (req, res, net) => {
+exports.signupUidai = (req, res, net) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         const error = new Error('Validation failed.');
@@ -27,19 +27,19 @@ exports.signupHospi = (req, res, net) => {
 
     bcrypt.hash(password, 12)
         .then(hashedPassword => {
-            const hospi = new Hospi({
+            const uidai = new Uidai({
                 name: name,
                 phone: phone,
                 email: email,
                 password: hashedPassword,
                 time:time
             });
-            return hospi.save();
+            return uidai.save();
         })
         .then(result => {
             return res.status(202).json({
                 status: "202",
-                message:"Hospital created"
+                message:"Uid data logged created"
             });
             // res.status(202).json({message: message, data: data});
         })
@@ -51,8 +51,8 @@ exports.signupHospi = (req, res, net) => {
       });
 }
 
-// Login hospi admins
-exports.loginHospi = (req, res, net) => {
+// Login Uidai admins
+exports.loginUidai = (req, res, net) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         const error = new Error('Login failed.');
@@ -62,7 +62,7 @@ exports.loginHospi = (req, res, net) => {
     }
     const email = req.body.email;
     const password = req.body.password;
-    Hospi.findOne({ email: email })
+    Uidai.findOne({ email: email })
         .then(user => {
             // CHeck if user is registered or not
             if (!user) {
@@ -114,7 +114,7 @@ exports.loginHospi = (req, res, net) => {
 }
 
 function isAuth(email, access_token) {
-    Hospi.findOne({ email: email })
+    Uidai.findOne({ email: email })
         .then(user => {
             if (!user) {
                 return false
@@ -147,6 +147,11 @@ exports.generateUID = (req, res, net) => {
     const email = req.body.email;
     const name = req.body.name;
     const image = req.file;
+    const img_temp_url = req.file.path;
+    const base_name = img_temp_url.split("/");
+    const url = path.join(__dirname,"certificates", base_name[2]);
+    let uid;
+    uid = "khanki.png";
 
     if (isAuth(admin_email, access_token) == false) {
         return res.status(401).json({
@@ -170,14 +175,10 @@ exports.generateUID = (req, res, net) => {
             message: "Certificate not found"
         });
     }
-    const img_temp_url = req.file.path;
-    const base_name = img_temp_url.split("/");
-    const url = path.join(__dirname,"certificates", base_name[2]);
-    let uid;
 
     var parent_res = res;
     const time = String(new Date().getTime());
-    needle.post('http://192.168.137.54:8888/hospital/admin/getdob',
+    needle.post('http://192.168.137.54:8888/Uidaital/admin/getdob',
         formData, { json: true }, (err, res) => {
             if (err) {
                 console.error(err);
@@ -215,4 +216,45 @@ exports.generateUID = (req, res, net) => {
                 console.log(err);
             })
         });
+}
+
+exports.getPendingRequests = (req, res, net) => {
+    const errors = validationResult(req);
+    const admin_email = req.body.admin_email;
+    const access_token = req.body.access_token;
+    if (!errors.isEmpty()) {
+        const error = new Error('Login failed.');
+        error.statusCode = 422;
+        error.data = errors.array();
+        throw error;
+    }
+    if (isAuth(admin_email, access_token) == false) {
+        return res.status(401).json({
+            status: 401,
+            message: "Unauthorized access"
+        });
+    }
+    var parent_res = res;
+    console.log("test-2");
+    needle.get("http://192.168.137.54:8888/uidai/admin/getPendingRequest", (err, res) => {
+        console.log("test-1");
+        if (err) {
+            return parent_res.status(500).json({
+                status: 500,
+                message: err.message
+            });
+        };
+        if (res.body.status == 500) {
+            return parent_res.status(500).json({
+                status: 500,
+                message: "Failed. Server crashed."
+            });
+        }
+        console.log(res.body);
+        return parent_res.status(202).json({
+            status: 202,
+            message: "Done",
+            requests: res.body.result
+            });
+    });
 }
