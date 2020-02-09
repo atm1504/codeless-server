@@ -81,22 +81,12 @@ exports.loginUidai = (req, res, net) => {
                         });
                     }
                     // let access_token;
-                    const to_hash = email + password + String(new Date().getTime());
-                    bcrypt.hash(to_hash, 12)
-                        .then(hashme => {
-                            user.accessToken = hashme;
-                            user.save();
-                            // console.log(access_token);
-                            
-                            return res.status(202).json({
-                                status: 202,
-                                message: "User logged in successfully.",
-                                access_token: hashme,
-                                email:email
-                            });
-                        }).catch(err => {
-                            console.log(err);
-                        });
+                    return res.status(202).json({
+                        status: 202,
+                        message: "User logged in successfully.",
+                        access_token: user._id,
+                        email: email
+                    });
                 })
                 .catch(err => {
                     if (!err.statusCode) {
@@ -111,27 +101,6 @@ exports.loginUidai = (req, res, net) => {
             }
             next(err);
         });
-}
-
-function isAuth(email, access_token) {
-    console.log(email, access_token);
-    if (email == "" || access_token == "") {
-        return false;
-    }
-    Uidai.findOne({ email: email })
-        .then(user => {
-            if (!user) {
-                return false
-            }
-            if (user.accessToken != access_token) {
-                return false
-            }
-            return true
-        }).catch(err => {
-            const error = new Error(err);
-            error.httpStatusCode = 500;
-            return next(error);
-    })
 }
 
 const fileFilter = (mimetype) => {
@@ -152,17 +121,8 @@ exports.getPendingRequests = (req, res, net) => {
         error.data = errors.array();
         throw error;
     }
-    console.log(isAuth(admin_email, access_token));
-    if (isAuth(admin_email, access_token) == true) {
-        return res.status(401).json({
-            status: 401,
-            message: "Unauthorized access"
-        });
-    }
     var parent_res = res;
-    // console.log("test-2");
     needle.get("http://192.168.137.54:8888/uidai/admin/getPendingRequest", (err, res) => {
-        // console.log("test-1");
         if (err) {
             return parent_res.status(500).json({
                 status: 500,
@@ -188,12 +148,6 @@ exports.getTheRequest = (req, res, net) => {
     const access_token = req.body.access_token;
     const r_key = req.body.r_key;
 
-    if (isAuth(admin_email, access_token) == false) {
-        return res.status(401).json({
-            status: 401,
-            message: "Unauthorized access"
-        });
-    }
     var formData = {
         r_key: r_key
     }
@@ -234,12 +188,6 @@ exports.getAcceptedRequests = (req, res, net) => {
         error.data = errors.array();
         throw error;
     }
-    if (isAuth(admin_email, access_token) == false) {
-        return res.status(401).json({
-            status: 401,
-            message: "Unauthorized access"
-        });
-    }
     var parent_res = res;
     console.log("test-2");
     needle.get("http://192.168.137.54:8888/uidai/admin/getAcceptRequest", (err, res) => {
@@ -277,12 +225,6 @@ exports.respondToRequest = (req, res, net) => {
         error.statusCode = 422;
         error.data = errors.array();
         throw error;
-    }
-    if (isAuth(admin_email, access_token) == false) {
-        return res.status(401).json({
-            status: 401,
-            message: "Unauthorized access"
-        });
     }
     var date;
     if (response == "-1") {
