@@ -61,8 +61,8 @@ exports.loginHospi = (req, res, net) => {
         error.data = errors.array();
         throw error;
     }
-    const email = req.body.email;
-    const password = req.body.password;
+    const email = req.query.email;
+    const password = req.query.password;
     Hospi.findOne({ email: email })
         .then(user => {
             // CHeck if user is registered or not
