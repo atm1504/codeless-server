@@ -62,6 +62,8 @@ exports.loginUidai = (req, res, net) => {
     }
     const email = req.body.email;
     const password = req.body.password;
+    console.log(email);
+    console.log(password);
     Uidai.findOne({ email: email })
         .then(user => {
             // CHeck if user is registered or not
