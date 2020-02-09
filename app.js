@@ -21,15 +21,19 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 const eduRoutes = require('./routes/edu');
 const hospiRoutes = require('./routes/hospi');
 const uidaiRoutes = require('./routes/uidai');
+const userRoutes = require("./routes/user");
 
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public')));
+// app.use(express.static(path.join(__dirname, 'public')));
+app.use('/controllers',express.static(path.join(__dirname, 'controllers')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 // app.use(csrfProtection);
 
 app.use('/edu', eduRoutes);
 app.use('/hospi',hospiRoutes);
-app.use('/uidai',uidaiRoutes);
+app.use('/uidai', uidaiRoutes);
+app.use('/user', userRoutes);
+
 
 app.get('/500', errorController.get500);
 
