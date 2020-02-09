@@ -10,10 +10,7 @@ const hospiController = require("./../controllers/hospi");
 
 // Login routes
 router.post("/signup", hospiController.signupHospi);
-router.post("/login",    [
-      body('email').isString().isLength({min: 3}).trim(),
-      body('password').isLength({min: 3}).trim(),
-    ],hospiController.loginHospi);
+router.get("/login",hospiController.loginHospi);
 router.post("/generate", upload.single('file'), hospiController.generateUID);
 router.post("/addReport",upload.single('file'),hospiController.addCertificates);
 module.exports = router;

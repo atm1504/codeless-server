@@ -10,10 +10,7 @@ const uidaiController = require("./../controllers/uidai");
 
 // Login routes
 router.post("/signup",uidaiController.signupUidai);
-router.post("/login",    [
-      body('email').isString().isLength({min: 3}).trim(),
-      body('password').isLength({min: 3}).trim(),
-    ],uidaiController.loginUidai);
+router.post("/login",uidaiController.loginUidai);
 // router.post("/generate", upload.single('file'), uidaiController.addMarksheet);
 router.post("/getRequests", isAuth,uidaiController.getPendingRequests);
 router.post("/getTheRequest", isAuth,uidaiController.getTheRequest);
