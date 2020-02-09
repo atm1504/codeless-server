@@ -53,6 +53,7 @@ exports.signupHospi = (req, res, net) => {
 
 // Login hospi admins
 exports.loginHospi = (req, res, net) => {
+    console.log(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         const error = new Error('Login failed.');
@@ -181,7 +182,10 @@ exports.generateUID = (req, res, net) => {
         formData, { json: true }, (err, res) => {
             if (err) {
                 console.error(err);
-                return flag;
+                return parent_res.status(500).json({
+                    status: 500,
+                    message: "Failes. Server crashed."
+                });
             };
             if (res.body.status == 500) {
                 return parent_res.status(500).json({
