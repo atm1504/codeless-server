@@ -16,6 +16,7 @@ router.post("/login",    [
     ],uidaiController.loginUidai);
 // router.post("/generate", upload.single('file'), uidaiController.addMarksheet);
 router.post("/getRequests", uidaiController.getPendingRequests);
-router.post("/getTheRequest", uidaiController.getTheRequest)
-router.post("/getAllRequest",uidaiController.getAcceptedRequests)
+router.post("/getTheRequest", uidaiController.getTheRequest);
+router.post("/getAllRequest", uidaiController.getAcceptedRequests);
+router.post("/responseToRequest", uidaiController.respondToRequest);
 module.exports = router;

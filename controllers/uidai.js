@@ -255,3 +255,59 @@ exports.getAcceptedRequests = (req, res, net) => {
             });
     });
 }
+
+exports.respondToRequest = (req, res, net) => {
+    const errors = validationResult(req);
+    const admin_email = req.body.admin_email;
+    const access_token = req.body.access_token;
+    const req_id = req.body.req_id;
+    const response = req.body.response;
+    
+    if (!errors.isEmpty()) {
+        const error = new Error('Login failed.');
+        error.statusCode = 422;
+        error.data = errors.array();
+        throw error;
+    }
+    if (isAuth(admin_email, access_token) == false) {
+        return res.status(401).json({
+            status: 401,
+            message: "Unauthorized access"
+        });
+    }
+    var date;
+    if (response == "-1") {
+        date ="21/43/56"
+    } else {
+        date = req.body.date;
+    }
+    var formData = {
+        req_id: req_id,
+        given_date: date,
+        response:response
+    }
+    var parent_res = res;
+    needle.post('http://192.168.137.54:8888/uidai/admin/responRequest',
+    formData, { json: true }, (err, res) => {
+        if (err) {
+            console.error(err);
+            return parent_res.status(500).json({
+                status: 500,
+                message: "Failed. Server crashed."
+            });
+        };
+        if (res.body.status == 500) {
+            return parent_res.status(500).json({
+                status: 500,
+                message: "Failed. Server crashed.",
+                err:res.body
+            });
+        }
+        return parent_res.status(200).json({
+                status: 200,
+                message: "Success",
+            result: res.body.result
+            });
+
+    });
+}
