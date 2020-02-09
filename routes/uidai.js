@@ -17,6 +17,7 @@ router.post("/login",    [
 // router.post("/generate", upload.single('file'), uidaiController.addMarksheet);
 router.post("/getRequests", isAuth,uidaiController.getPendingRequests);
 router.post("/getTheRequest", isAuth,uidaiController.getTheRequest);
-router.post("/getAllRequest", isAuth,uidaiController.getAcceptedRequests);
-router.post("/responseToRequest", isAuth ,uidaiController.respondToRequest);
+router.post("/getAcceptedRequest", isAuth,uidaiController.getAcceptedRequests);
+router.post("/responseToRequest", isAuth, uidaiController.respondToRequest);
+router.post("/verify", isAuth ,uidaiController.uidAdminVerify);
 module.exports = router;

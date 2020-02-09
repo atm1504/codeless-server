@@ -191,7 +191,7 @@ exports.getAcceptedRequests = (req, res, net) => {
     var parent_res = res;
     console.log("test-2");
     needle.get("http://192.168.137.54:8888/uidai/admin/getAcceptRequest", (err, res) => {
-        console.log("test-1");
+        console.log(res);
         if (err) {
             return parent_res.status(500).json({
                 status: 500,
@@ -258,6 +258,45 @@ exports.respondToRequest = (req, res, net) => {
                 status: 200,
                 message: "Success",
             result: res.body.result
+            });
+
+    });
+}
+
+exports.uidAdminVerify = (req, res, net) => {
+    const errors = validationResult(req);
+    const req_id = req.body.req_id;
+    if (!errors.isEmpty()) {
+        const error = new Error('Login failed.');
+        error.statusCode = 422;
+        error.data = errors.array();
+        throw error;
+    }
+
+    var formData = {
+        req_id: req_id
+    }
+    var parent_res = res;
+    needle.post('http://192.168.137.54:8888/uidai/admin/verify',
+    formData, { json: true }, (err, res) => {
+        if (err) {
+            console.error(err);
+            return parent_res.status(500).json({
+                status: 500,
+                message: "Failed. Server crashed."
+            });
+        };
+        if (res.body.status == 500) {
+            return parent_res.status(500).json({
+                status: 500,
+                message: "Failed. Server crashed.",
+                err:res.body
+            });
+        }
+        return parent_res.status(200).json({
+                status: 200,
+                message: "Success",
+                result: res.body
             });
 
     });
